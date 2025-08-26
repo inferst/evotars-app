@@ -50,11 +50,16 @@ export const dashActionData = {
 };
 
 export const spriteActionData = {
-  data: z.object({
-    action: z.object({
-      sprite: z.string(),
+  data: z.union([
+    z.object({
+      arguments: z.array(z.literal('sprite')).min(1).max(1),
     }),
-  }),
+    z.object({
+      action: z.object({
+        sprite: z.string(),
+      }),
+    }),
+  ]),
 };
 
 export const addJumpHitsActionData = {
