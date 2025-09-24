@@ -20,7 +20,7 @@ jobs:
         rm: true
   run_dockerfile:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     needs: copy_files_to_server
     steps:
     - name: Run Dockerfile
