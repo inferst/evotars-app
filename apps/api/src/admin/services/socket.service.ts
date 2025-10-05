@@ -16,7 +16,7 @@ import {
 import { ActionService } from './action.service';
 import { ChatMessageService } from './chat-message.service';
 import { ChatterRepository } from '../repositories/chatter.repository';
-import { EmoteClient, EmoteService } from './emote.service';
+import { IEmoteClient, EmoteService } from './emotes/emote.service';
 
 type SocketClient = {
   socket: Socket;
@@ -26,7 +26,7 @@ type SocketClient = {
 type Room = {
   clients: Socket[];
   eventClient?: EventClient;
-  emoteClient?: EmoteClient;
+  emoteClient?: IEmoteClient;
 };
 
 @Injectable()
