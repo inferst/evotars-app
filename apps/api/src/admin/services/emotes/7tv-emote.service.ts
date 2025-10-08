@@ -1,8 +1,14 @@
+import {
+  Emote,
+  IEmoteClient,
+  IEmoteService,
+} from '@/admin/services/emotes/emote.service';
 import { ConfigService } from '@/config/config.service';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { WebSocket } from 'ws';
+import { z } from 'zod';
 
 type SevenTVEmoteData = {
   userId: string;
@@ -14,104 +20,97 @@ type SevenTVEmotes = {
   [name: string]: string;
 };
 
-type Emote = {
-  name: string;
-  url: string;
-};
+const SevenTVEventEmoteSchema = z.object({
+  name: z.string(),
+  data: z.object({
+    animated: z.boolean(),
+    host: z.object({
+      url: z.string(),
+    }),
+  }),
+});
 
-type SevenTVTwitchUserData = {
-  emote_set: {
-    id: string;
-    emotes: SevenTVEventEmote[];
-  };
-  user: {
-    id: string;
-  };
-};
+const SevenTVTwitchUserDataSchema = z.object({
+  emote_set: z.object({
+    id: z.string(),
+    emotes: z.array(SevenTVEventEmoteSchema),
+  }),
+  user: z.object({
+    id: z.string(),
+  }),
+});
 
-type SevenTVEventEmote = {
-  name: string;
-  data: {
-    animated: boolean;
-    host: {
-      url: string;
-    };
-  };
-};
+const SevenTVUserUpdateSchema = z.object({
+  type: z.literal('user.update'),
+  body: z.object({
+    updated: z.array(
+      z.object({
+        key: z.literal('connections'),
+        value: z.array(
+          z.object({
+            key: z.literal('emote_set_id'),
+            old_value: z.string(),
+            value: z.string(),
+          }),
+        ),
+      }),
+    ),
+  }),
+});
 
-type SevenTVEventPushedEmote = {
-  value: SevenTVEventEmote;
-};
+const SevenTVEmoteSetUpdateSchema = z.object({
+  type: z.literal('emote_set.update'),
+  body: z.object({
+    pushed: z.array(
+      z.object({
+        value: z.object({
+          name: z.string(),
+          data: z.object({
+            animated: z.boolean(),
+            host: z.object({
+              url: z.string(),
+            }),
+          }),
+        }),
+      }),
+    ),
+    pulled: z.array(
+      z.object({
+        old_value: z.object({
+          name: z.string(),
+        }),
+      }),
+    ),
+  }),
+});
 
-type SevenTVEventPulledEmote = {
-  old_value: {
-    name: string;
-  };
-};
+const SevenTVUpdateSchema = z.object({
+  d: z.discriminatedUnion('type', [
+    SevenTVEmoteSetUpdateSchema,
+    SevenTVUserUpdateSchema,
+  ]),
+});
 
-type SevenTVEmoteEvent = {
-  d: {
-    type: string;
-    body: SevenTVEmoteSetUpdateBody | SevenTVUserUpdateEvent;
-  };
-};
+const UserDataSchema = z.object({
+  data: SevenTVTwitchUserDataSchema,
+});
 
-type SevenTVEmoteSetUpdateBody = {
-  pushed?: SevenTVEventPushedEmote[];
-  pulled?: SevenTVEventPulledEmote[];
-};
-
-type SevenTVUserUpdateData = {
-  key: 'emote_set_id';
-  old_value: string;
-  value: string;
-};
-
-type SevenTVUserUpdateEvent = {
-  updated: {
-    key: 'connections';
-    value: SevenTVUserUpdateData[];
-  }[];
-};
-
-type UserData = {
-  data: SevenTVTwitchUserData;
-};
-
-type GlobalData = {
-  data: {
-    emotes: SevenTVEventEmote[];
-  };
-};
-
-const isSevenTVEvent = (data: unknown): data is SevenTVEmoteEvent => {
-  return (
-    typeof data == 'object' &&
-    data != null &&
-    'd' in data &&
-    typeof data.d == 'object' &&
-    data.d != null &&
-    'type' in data.d &&
-    typeof data.d.type == 'string'
-  );
-};
-
-export type EmoteClient = {
-  getEmotes: (text: string) => Emote[];
-  connect: () => void;
-  disconnect: () => void;
-};
+const GlobalDataSchema = z.object({
+  data: z.object({
+    emotes: z.array(SevenTVEventEmoteSchema),
+  }),
+});
 
 @Injectable()
-export class EmoteService {
-  private readonly logger = new Logger(EmoteService.name);
+export class SevenTVEmoteService implements IEmoteService {
+  private readonly logger = new Logger(SevenTVEmoteService.name);
 
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {}
 
-  public async createClient(platformUserId: string): Promise<EmoteClient> {
+  public async createClient(platformUserId: string): Promise<IEmoteClient> {
     const hostUrl = this.configService.hostUrl;
 
     let emotes: SevenTVEmotes = {};
@@ -143,28 +142,28 @@ export class EmoteService {
         },
       };
 
-      ws.onopen = (): void => {
-        ws.send(
-          JSON.stringify({
-            op: 35,
-            d: {
-              type: 'emote_set.update',
-              condition: {
-                object_id: emoteSetId,
-              },
-            },
-          }),
-        );
+      const emoteSetUpdateSubscribe = {
+        op: 35,
+        d: {
+          type: 'emote_set.update',
+          condition: {
+            object_id: emoteSetId,
+          },
+        },
+      };
 
+      ws.onopen = (): void => {
+        ws.send(JSON.stringify(emoteSetUpdateSubscribe));
         ws.send(JSON.stringify(userUpdateSubscribe));
 
-        ws.onmessage = async (event: unknown): Promise<void> => {
+        ws.onmessage = async (event) => {
           try {
-            const data = JSON.parse((event as object)['data']);
+            const data = JSON.parse(event.data as string);
+            const result = SevenTVUpdateSchema.safeParse(data);
 
-            if (isSevenTVEvent(data)) {
-              if (data.d.type == 'user.update') {
-                const body = data.d.body as SevenTVUserUpdateEvent;
+            if (result.success) {
+              if (result.data.d.type == 'user.update') {
+                const body = result.data.d.body;
 
                 const event = body.updated
                   .find((event) => event.key == 'connections')
@@ -203,8 +202,8 @@ export class EmoteService {
                 }
               }
 
-              if (data.d.type == 'emote_set.update') {
-                const body = data.d.body as SevenTVEmoteSetUpdateBody;
+              if (result.data.d.type == 'emote_set.update') {
+                const body = result.data.d.body;
 
                 const pulled = body.pulled;
                 const pushed = body.pushed;
@@ -289,16 +288,23 @@ export class EmoteService {
       const userUrl = `https://7tv.io/v3/users/twitch/${platformUserId}?t=${Date.now()}`;
       const globalUrl = 'https://7tv.io/v3/emote-sets/global';
 
-      const promises: [Promise<UserData>, Promise<GlobalData>] = [
+      const promises: [Promise<unknown>, Promise<unknown>] = [
         firstValueFrom(this.httpService.get(userUrl)),
         firstValueFrom(this.httpService.get(globalUrl)),
       ];
 
       const [userData, globalData] = await Promise.all(promises);
 
+      const userDataResult = UserDataSchema.safeParse(userData);
+      const globalDataResult = GlobalDataSchema.safeParse(globalData);
+
+      if (!userDataResult.success || !globalDataResult.success) {
+        throw new Error('Failed to parse data');
+      }
+
       const emotes = [
-        ...userData.data.emote_set.emotes,
-        ...globalData.data.emotes,
+        ...userDataResult.data.data.emote_set.emotes,
+        ...globalDataResult.data.data.emotes,
       ];
 
       const emoteEntries = emotes.map((emote) => {
@@ -311,8 +317,8 @@ export class EmoteService {
       });
 
       return {
-        userId: userData.data.user.id,
-        emoteSetId: userData.data.emote_set.id,
+        userId: userDataResult.data.data.user.id,
+        emoteSetId: userDataResult.data.data.emote_set.id,
         data: Object.fromEntries(emoteEntries),
       };
     } catch (e) {

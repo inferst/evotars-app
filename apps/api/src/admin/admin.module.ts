@@ -34,11 +34,14 @@ import { CommandRepository } from './repositories/command.repository';
 import { SettingsRepository } from './repositories/settings.repository';
 import { TwitchRewardRepository } from './repositories/twitch-reward.repository';
 import { ChatterService } from './services/chatter.service';
-import { EmoteService } from './services/emote.service';
+import { EmoteService } from './services/emotes/emote.service';
 import { TwitchClientFactory } from './twitch/twitch-client.factory';
 import { TwitchUserFilterService } from './twitch/twitch-user-filter.service';
 import { UserSkinCollectionService } from './services/user-skin-collection.service';
 import { UserSkinService } from './services/user-skin.service';
+import { SevenTVEmoteService } from '@/admin/services/emotes/7tv-emote.service';
+import { BTTVEmoteService } from '@/admin/services/emotes/bttv-emote.service';
+import { FFZEmoteService } from '@/admin/services/emotes/ffz-emote.service';
 
 const twitchClientFactory = {
   provide: 'TWITCH_CLIENT_FACTORY',
@@ -46,13 +49,13 @@ const twitchClientFactory = {
     config: ConfigService,
     prisma: PrismaService,
     twitchUserFilterService: TwitchUserFilterService,
-    chatMessageService: ChatMessageService
+    chatMessageService: ChatMessageService,
   ): TwitchClientFactory =>
     new TwitchClientFactory(
       config,
       prisma,
       twitchUserFilterService,
-      chatMessageService
+      chatMessageService,
     ),
   inject: [
     ConfigService,
@@ -84,6 +87,9 @@ const twitchClientFactory = {
     TwitchUserFilterService,
     ChatMessageService,
     EmoteService,
+    SevenTVEmoteService,
+    BTTVEmoteService,
+    FFZEmoteService,
     EventsGateway,
     SocketService,
     ActionService,
