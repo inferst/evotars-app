@@ -1,5 +1,6 @@
 import { SevenTVEmoteService } from '@/admin/services/emotes/7tv-emote.service';
 import { BTTVEmoteService } from '@/admin/services/emotes/bttv-emote.service';
+import { FFZEmoteService } from '@/admin/services/emotes/ffz-emote.service';
 import { Injectable } from '@nestjs/common';
 
 export type Emote = {
@@ -22,12 +23,14 @@ export class EmoteService {
   constructor(
     private readonly sevenTVEmoteService: SevenTVEmoteService,
     private readonly BTTVEmoteService: BTTVEmoteService,
+    private readonly FFZEmoteService: FFZEmoteService,
   ) {}
 
   public async createClient(platformUserId: string): Promise<IEmoteClient> {
     const providers: IEmoteClient[] = [
       await this.sevenTVEmoteService.createClient(platformUserId),
       await this.BTTVEmoteService.createClient(platformUserId),
+      await this.FFZEmoteService.createClient(platformUserId),
     ];
 
     return {

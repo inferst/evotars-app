@@ -290,8 +290,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/typescript-config
       evotars:
-        specifier: 0.0.18
-        version: 0.0.18
+        specifier: 0.0.20
+        version: 0.0.20
       socket.io-client:
         specifier: 4.8.1
         version: 4.8.1
@@ -324,8 +324,8 @@ importers:
         specifier: 2.1.1
         version: 2.1.1
       evotars:
-        specifier: 0.0.18
-        version: 0.0.18
+        specifier: 0.0.20
+        version: 0.0.20
       i18next:
         specifier: 25.1.2
         version: 25.1.2(typescript@5.8.3)
@@ -4138,8 +4138,8 @@ packages:
     resolution: {integrity: sha512-CRT1WTyuQoD771GW56XEZFQ/ZoSfWid1alKGDYMmkt2yl8UXrVR4pspqWNEcqKvVIzg6PAltWjxcSSPrboA4iA==}
     engines: {node: '>=18.0.0'}
 
-  evotars@0.0.18:
-    resolution: {integrity: sha512-+M+EdLjkq54fWeI2HP1CS7DxZf5AIZ/hIrc+wgXP9miUChgGYMqTK+p/PZVCj/qldH3PX2/NRzMYL0j56sVmzg==}
+  evotars@0.0.20:
+    resolution: {integrity: sha512-tWRzHzNlDNpY6x/XbT5frniY80HD/d98FtYoYwHwd8o5cD0EBk5SBLmzIb24CZadGBP5aMsGcseYcj4UDiGx8A==}
 
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
@@ -10465,7 +10465,7 @@ snapshots:
     dependencies:
       eventsource-parser: 3.0.1
 
-  evotars@0.0.18:
+  evotars@0.0.20:
     dependencies:
       '@pixi/gif': 3.0.1(pixi.js@8.9.2)
       '@tweenjs/tween.js': 23.1.3
