@@ -18,11 +18,11 @@ export const metadata: Metadata = {
   description:
     'Evotars turns your Twitch chat participants into interactive avatars on your stream. Boost engagement and grow your channel with customizable, game-like characters for your viewers.',
   keywords:
-    'twitch, chat, avatars, stream, streamer, interactive, channel rewards, emotes, 7tv, obs, overlay',
+    'twitch, chat, avatars, stream, streamer, interactive, channel rewards, emotes, 7tv, bttv, ffz, obs, overlay',
   openGraph: {
     title: 'Evotars — Interactive Twitch Avatars for Chat viewers',
     description:
-      'Evotars brings your Twitch chat to life with interactive, customizable avatars. Easy browser integration for OBS, channel rewards, 7TV emotes, and raid support.',
+      'Evotars brings your Twitch chat to life with interactive, customizable avatars. Easy browser integration for OBS, channel rewards, BTTV, FFZ, 7TV emotes, and raid support.',
     url: 'https://evotars.inferst.com',
     locale: 'en_US',
     type: 'website',
