@@ -1,0 +1,124 @@
+name: Evotars Deploy (Test)
+run-name: ${{ github.actor }} is deploying Evotars
+on:
+  workflow_dispatch:
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}/api
+            ghcr.io/${{ github.repository }}/website
+
+      - name: Build and push API Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags_api }}
+          labels: ${{ steps.meta.outputs.labels_api }}
+          target: api
+          build-args: |
+            VITE_CLIENT_SOCKET_HOST=${{ vars.VITE_CLIENT_SOCKET_HOST }}
+            VITE_CJS_IGNORE_WARNING=${{ vars.VITE_CJS_IGNORE_WARNING }}
+            VITE_API_URL=${{ vars.VITE_API_URL }}
+
+      - name: Build and push Website Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags_website }}
+          labels: ${{ steps.meta.outputs.labels_website }}
+          target: website
+
+  copy_compose_file:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - uses: actions/checkout@v4
+    - name: Copy compose file
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        source: "compose.prod.yaml"
+        target: /srv/dudes
+        host: ${{ secrets.hostname }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        overwrite: true
+        rm: true
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 15
+
+    steps:
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v0.1.10
+        env:
+          HOST_URL: ${{ vars.HOST_URL }}
+          ADMIN_URL: ${{ vars.ADMIN_URL }}
+          CLIENT_URL: ${{ vars.CLIENT_URL }}
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+          TWITCH_CALLBACK_URL: ${{ vars.TWITCH_CALLBACK_URL }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          REMIX_PORT: ${{ secrets.REMIX_PORT }}
+          DATABASE_URL: ${{ vars.DATABASE_URL }}
+          API_IMAGE_NAME: ghcr.io/${{ github.repository }}/api:main
+          WEBSITE_IMAGE_NAME: ghcr.io/${{ github.repository }}/website:main
+
+        with:
+          host: ${{ secrets.hostname }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          command_timeout: 30m
+          envs: HOST_URL,ADMIN_URL,CLIENT_URL,TWITCH_CLIENT_ID,TWITCH_CLIENT_SECRET,TWITCH_CALLBACK_URL,SESSION_SECRET,DATABASE_URL,REMIX_PORT,API_IMAGE_NAME,WEBSITE_IMAGE_NAME
+          script: |
+            cd /srv/dudes
+
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            docker pull $IMAGE_NAME
+
+            docker compose -f compose.prod.yaml down
+            docker compose -f compose.prod.yaml up -d
+
+            docker image prune -f
+
+  health_check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: deploy
+    steps:
+    - name: Heath check
+      uses: jtalk/url-health-check-action@v3
+      with:
+        url: https://evotars.inferst.com/api/meta
+        follow-redirect: false
+        max-attempts: 3
+        retry-delay: 10s
+        retry-all: true
