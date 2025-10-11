@@ -1,7 +1,9 @@
 services:
   app:
-    image: ${IMAGE_NAME}
-    target: api
+    image: evotars-build
+    build:
+      context: .
+    command: sh -c "cd apps/api && node dist/main.js"
     container_name: evotars-app
     working_dir: /app
     environment:
@@ -17,8 +19,8 @@ services:
     restart: unless-stopped
 
   website:
-    image: ${IMAGE_NAME}
-    target: website
+    image: evotars-build
+    command: sh -c "cd apps/website && pnpm run start"
     environment:
       - PORT=${REMIX_PORT}
     container_name: evotars-website
