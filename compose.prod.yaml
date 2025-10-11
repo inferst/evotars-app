@@ -1,6 +1,9 @@
 services:
   app:
-    image: ghcr.io/inferst/evotars-app/app:main
+    image: evotars-build
+    build:
+      context: .
+    command: sh -c "cd apps/api && node dist/main.js"
     container_name: evotars-app
     working_dir: /app
     environment:
@@ -16,7 +19,8 @@ services:
     restart: unless-stopped
 
   website:
-    image: ghcr.io/inferst/evotars-app/website:main
+    image: evotars-build
+    command: sh -c "cd apps/website && pnpm run start"
     environment:
       - PORT=${REMIX_PORT}
     container_name: evotars-website
