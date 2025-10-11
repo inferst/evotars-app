@@ -21,22 +21,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ghcr.io/${{ github.repository }}/api
-            ghcr.io/${{ github.repository }}/website
-
-      - name: Build and push API Docker image
+      - name: Build and push App Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          target: api
+          tags: ghcr.io/inferst/evotars-app/app:main
+          target: app
           build-args: |
             VITE_CLIENT_SOCKET_HOST=${{ vars.VITE_CLIENT_SOCKET_HOST }}
             VITE_CJS_IGNORE_WARNING=${{ vars.VITE_CJS_IGNORE_WARNING }}
@@ -48,10 +40,10 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ghcr.io/inferst/evotars-app/website:main
           target: website
 
-  copy_compose_file:
+  copy_files:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -59,7 +51,7 @@ jobs:
     - name: Copy compose file
       uses: appleboy/scp-action@v0.1.7
       with:
-        source: "compose.prod.yaml"
+        source: "compose.prod.yaml,nginx,static"
         target: /srv/dudes
         host: ${{ secrets.hostname }}
         username: ${{ secrets.USERNAME }}
@@ -85,7 +77,7 @@ jobs:
           SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
           REMIX_PORT: ${{ secrets.REMIX_PORT }}
           DATABASE_URL: ${{ vars.DATABASE_URL }}
-          API_IMAGE_NAME: ghcr.io/${{ github.repository }}/api:main
+          APP_IMAGE_NAME: ghcr.io/${{ github.repository }}/app:main
           WEBSITE_IMAGE_NAME: ghcr.io/${{ github.repository }}/website:main
 
         with:
@@ -94,13 +86,13 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
           command_timeout: 30m
-          envs: HOST_URL,ADMIN_URL,CLIENT_URL,TWITCH_CLIENT_ID,TWITCH_CLIENT_SECRET,TWITCH_CALLBACK_URL,SESSION_SECRET,DATABASE_URL,REMIX_PORT,API_IMAGE_NAME,WEBSITE_IMAGE_NAME
+          envs: HOST_URL,ADMIN_URL,CLIENT_URL,TWITCH_CLIENT_ID,TWITCH_CLIENT_SECRET,TWITCH_CALLBACK_URL,SESSION_SECRET,DATABASE_URL,REMIX_PORT,APP_IMAGE_NAME,WEBSITE_IMAGE_NAME
           script: |
             cd /srv/dudes
 
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            docker pull $IMAGE_NAME
+            docker compose -f compose.prod.yaml pull app website
 
             docker compose -f compose.prod.yaml down
             docker compose -f compose.prod.yaml up -d

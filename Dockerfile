@@ -19,7 +19,7 @@ RUN pnpm install
 RUN pnpm run build
 
 
-FROM node:20-alpine as api
+FROM node:20-alpine as app
 
 # RUN apk add --no-cache openssl
 
@@ -62,4 +62,4 @@ EXPOSE 3000
 
 ENV PORT=3000
 
-CMD HOSTNAME="0.0.0.0" node server.js
+CMD HOSTNAME="0.0.0.0" node apps/website/server.js

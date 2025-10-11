@@ -1,6 +1,6 @@
 services:
   app:
-    image: ${API_IMAGE_NAME}
+    image: ghcr.io/inferst/evotars-app/app:main
     container_name: evotars-app
     working_dir: /app
     environment:
@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
 
   website:
-    image: ${WEBSITE_IMAGE_NAME}
+    image: ghcr.io/inferst/evotars-app/website:main
     environment:
       - PORT=${REMIX_PORT}
     container_name: evotars-website
