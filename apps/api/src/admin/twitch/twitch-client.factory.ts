@@ -123,8 +123,8 @@ export class TwitchClientFactory {
       channels: [userToken.platformLogin],
     });
 
-    let channelRedemptionAddSubscription: EventSubSubscription;
-    let channelRaidSubscription: EventSubSubscription;
+    let channelRedemptionAddSubscription: EventSubSubscription | undefined;
+    let channelRaidSubscription: EventSubSubscription | undefined;
 
     const onRewardRedemptionAdd = (
       listener: (data: RewardRedemptionData) => void,
@@ -266,8 +266,8 @@ export class TwitchClientFactory {
     const disconnect = async (): Promise<void> => {
       clearInterval(timerId);
       chatClient.quit();
-      channelRedemptionAddSubscription.stop();
-      channelRaidSubscription.stop();
+      channelRedemptionAddSubscription?.stop();
+      channelRaidSubscription?.stop();
 
       this.logger.log(
         `User [${userToken.platformUserId}] TwitchClientFactory client has been disconnected`,
