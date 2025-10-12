@@ -201,6 +201,9 @@ importers:
       '@twurple/chat':
         specifier: 7.3.0
         version: 7.3.0(@twurple/auth@7.3.0(encoding@0.1.13))
+      '@twurple/eventsub-base':
+        specifier: 7.3.0
+        version: 7.3.0(encoding@0.1.13)
       '@twurple/eventsub-ws':
         specifier: 7.3.0
         version: 7.3.0(@twurple/api@7.3.0(@twurple/auth@7.3.0(encoding@0.1.13))(encoding@0.1.13))(encoding@0.1.13)

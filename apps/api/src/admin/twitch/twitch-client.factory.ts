@@ -13,6 +13,7 @@ import { ApiClient } from '@twurple/api';
 import { RefreshingAuthProvider } from '@twurple/auth';
 import { ChatClient } from '@twurple/chat';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
+import { EventSubSubscription } from '@twurple/eventsub-base';
 import { HttpStatusCode } from 'axios';
 import { EventClient } from '../event-client/event-client.factory';
 import { ChatMessageService } from '../services';
@@ -26,6 +27,7 @@ export class TwitchClientFactory {
 
   public authProvider: RefreshingAuthProvider;
   public apiClient: ApiClient;
+  public eventSubWsListener: EventSubWsListener;
 
   public constructor(
     private readonly configService: ConfigService,
@@ -64,6 +66,12 @@ export class TwitchClientFactory {
     });
 
     this.apiClient = new ApiClient({ authProvider: this.authProvider });
+
+    this.eventSubWsListener = new EventSubWsListener({
+      apiClient: this.apiClient,
+    });
+
+    this.eventSubWsListener.start();
   }
 
   public async addUserToken(
@@ -115,30 +123,28 @@ export class TwitchClientFactory {
       channels: [userToken.platformLogin],
     });
 
-    const eventSubWsListener = new EventSubWsListener({
-      apiClient: this.apiClient,
-    });
-
-    eventSubWsListener.start();
+    let channelRedemptionAddSubscription: EventSubSubscription;
+    let channelRaidSubscription: EventSubSubscription;
 
     const onRewardRedemptionAdd = (
       listener: (data: RewardRedemptionData) => void,
     ): void => {
-      eventSubWsListener.onChannelRedemptionAdd(
-        userToken.platformUserId,
-        (data) => {
-          listener({
-            rewardId: data.rewardId,
-            userId: data.userId,
-            userDisplayName: data.userDisplayName,
-            input: data.input,
-          });
-        },
-      );
+      channelRedemptionAddSubscription =
+        this.eventSubWsListener.onChannelRedemptionAdd(
+          userToken.platformUserId,
+          (data) => {
+            listener({
+              rewardId: data.rewardId,
+              userId: data.userId,
+              userDisplayName: data.userDisplayName,
+              input: data.input,
+            });
+          },
+        );
     };
 
     const onRaid = (listener: (data: RaidEntity) => void): void => {
-      eventSubWsListener.onChannelRaidTo(
+      channelRaidSubscription = this.eventSubWsListener.onChannelRaidTo(
         userToken.platformUserId,
         async (data) => {
           const broadcaster = await data.getRaidingBroadcaster();
@@ -260,7 +266,8 @@ export class TwitchClientFactory {
     const disconnect = async (): Promise<void> => {
       clearInterval(timerId);
       chatClient.quit();
-      eventSubWsListener.stop();
+      channelRedemptionAddSubscription.stop();
+      channelRaidSubscription.stop();
 
       this.logger.log(
         `User [${userToken.platformUserId}] TwitchClientFactory client has been disconnected`,
