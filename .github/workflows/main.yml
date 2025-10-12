@@ -1,4 +1,4 @@
-name: Evotars Deploy (Test)
+name: Evotars Deploy
 run-name: ${{ github.actor }} is deploying Evotars
 on:
   workflow_dispatch:
