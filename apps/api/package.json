@@ -30,6 +30,7 @@
     "@twurple/auth": "7.3.0",
     "@twurple/chat": "7.3.0",
     "@twurple/eventsub-ws": "7.3.0",
+    "@twurple/eventsub-http": "7.3.0",
     "@twurple/eventsub-base": "7.3.0",
     "@types/express": "5.0.1",
     "@types/express-session": "1.18.1",

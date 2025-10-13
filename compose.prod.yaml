@@ -4,11 +4,13 @@ services:
     container_name: evotars-app
     working_dir: /app/apps/api
     environment:
+      - HOST=${HOST}
       - HOST_URL=${HOST_URL}
       - ADMIN_URL=${ADMIN_URL}
       - CLIENT_URL=${CLIENT_URL}
       - TWITCH_CLIENT_ID=${TWITCH_CLIENT_ID}
       - TWITCH_CLIENT_SECRET=${TWITCH_CLIENT_SECRET}
+      - TWITCH_WEBHOOK_SECRET=${TWITCH_WEBHOOK_SECRET}
       - TWITCH_CALLBACK_URL=${TWITCH_CALLBACK_URL}
       - SESSION_SECRET=${SESSION_SECRET}
       - DATABASE_URL=${DATABASE_URL}

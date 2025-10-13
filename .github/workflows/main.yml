@@ -52,7 +52,7 @@ jobs:
       uses: appleboy/scp-action@v0.1.7
       with:
         source: "compose.prod.yaml,nginx,static"
-        target: /srv/dudes
+        target: /srv/evotars
         host: ${{ secrets.hostname }}
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
@@ -68,11 +68,13 @@ jobs:
       - name: Deploy to Server
         uses: appleboy/ssh-action@v0.1.10
         env:
+          HOST: ${{ vars.HOST }}
           HOST_URL: ${{ vars.HOST_URL }}
           ADMIN_URL: ${{ vars.ADMIN_URL }}
           CLIENT_URL: ${{ vars.CLIENT_URL }}
           TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
           TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+          TWITCH_WEBHOOK_SECRET: ${{ secrets.TWITCH_WEBHOOK_SECRET }}
           TWITCH_CALLBACK_URL: ${{ vars.TWITCH_CALLBACK_URL }}
           SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
           REMIX_PORT: ${{ secrets.REMIX_PORT }}
@@ -86,9 +88,9 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
           command_timeout: 30m
-          envs: HOST_URL,ADMIN_URL,CLIENT_URL,TWITCH_CLIENT_ID,TWITCH_CLIENT_SECRET,TWITCH_CALLBACK_URL,SESSION_SECRET,DATABASE_URL,REMIX_PORT,APP_IMAGE_NAME,WEBSITE_IMAGE_NAME
+          envs: HOST,HOST_URL,ADMIN_URL,CLIENT_URL,TWITCH_CLIENT_ID,TWITCH_WEBHOOK_SECRET,TWITCH_CLIENT_SECRET,TWITCH_CALLBACK_URL,SESSION_SECRET,DATABASE_URL,REMIX_PORT,APP_IMAGE_NAME,WEBSITE_IMAGE_NAME
           script: |
-            cd /srv/dudes
+            cd /srv/evotars
 
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
