@@ -21,7 +21,10 @@ const schema = z.object({
   exports: [ConfigService],
   imports: [
     NestConfigModule.forRoot({
-      validate: (env) => schema.parse(env),
+      validate: (env) => {
+        console.log(env);
+        return schema.parse(env);
+      },
       validationOptions: {
         abortEarly: true,
       },
