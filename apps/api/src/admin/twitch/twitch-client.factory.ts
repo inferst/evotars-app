@@ -3,8 +3,8 @@ import { TWITCH_PLATFORM_ID, TWITCH_SCOPE } from '@/constants';
 import { PrismaService } from '@/database/prisma.service';
 import {
   MessageEntity,
-  // RaidEntity,
-  // RewardRedemptionData,
+  RaidEntity,
+  RewardRedemptionData,
   TwitchChatterEntity,
 } from '@repo/types';
 import { HttpException, Logger } from '@nestjs/common';
@@ -18,7 +18,7 @@ import { EventClient } from '../event-client/event-client.factory';
 import { ChatMessageService } from '../services';
 import { TokenRevokedException } from './token-revoked.exception';
 import { TwitchUserFilterService } from './twitch-user-filter.service';
-// import { EventSubHttpListener, ReverseProxyAdapter } from '@twurple/eventsub-http';
+import { EventSubHttpListener, ReverseProxyAdapter } from '@twurple/eventsub-http';
 
 const TWITCH_CHATTERS_SEND_INTERVAL = 60 * 1000; // 1 minute.
 
@@ -27,7 +27,7 @@ export class TwitchClientFactory {
 
   public authProvider: RefreshingAuthProvider;
   public apiClient: ApiClient;
-  // public eventSubHttpListener: EventSubHttpListener;
+  public eventSubHttpListener: EventSubHttpListener;
 
   public constructor(
     private readonly configService: ConfigService,
@@ -67,17 +67,18 @@ export class TwitchClientFactory {
 
     this.apiClient = new ApiClient({ authProvider: this.authProvider });
 
-    // this.eventSubHttpListener = new EventSubHttpListener({
-    //   apiClient: this.apiClient,
-    //   adapter: new ReverseProxyAdapter({
-    //     hostName: this.configService.host,
-    //     pathPrefix: "twitch",
-    //     port: 3001,
-    //   }),
-    //   secret: this.configService.twitchWebhookSecret,
-    // });
-    //
-    // this.eventSubHttpListener.start();
+    this.eventSubHttpListener = new EventSubHttpListener({
+      apiClient: this.apiClient,
+      adapter: new ReverseProxyAdapter({
+        hostName: this.configService.host,
+        pathPrefix: "twitch",
+        port: 3001,
+        usePathPrefixInHandlers: true,
+      }),
+      secret: this.configService.twitchWebhookSecret,
+    });
+
+    this.eventSubHttpListener.start();
   }
 
   public async addUserToken(
@@ -133,48 +134,48 @@ export class TwitchClientFactory {
     let channelRaidSubscription: EventSubSubscription | undefined;
 
     const onRewardRedemptionAdd = (
-      // listener: (data: RewardRedemptionData) => void,
+      listener: (data: RewardRedemptionData) => void,
     ): void => {
-      // channelRedemptionAddSubscription =
-      //   this.eventSubHttpListener.onChannelRedemptionAdd(
-      //     userToken.platformUserId,
-      //     (data) => {
-      //       listener({
-      //         rewardId: data.rewardId,
-      //         userId: data.userId,
-      //         userDisplayName: data.userDisplayName,
-      //         input: data.input,
-      //       });
-      //     },
-      //   );
+      channelRedemptionAddSubscription =
+        this.eventSubHttpListener.onChannelRedemptionAdd(
+          userToken.platformUserId,
+          (data) => {
+            listener({
+              rewardId: data.rewardId,
+              userId: data.userId,
+              userDisplayName: data.userDisplayName,
+              input: data.input,
+            });
+          },
+        );
     };
 
     const onRaid = (
-      // listener: (data: RaidEntity) => void
+      listener: (data: RaidEntity) => void
     ): void => {
-      // channelRaidSubscription = this.eventSubHttpListener.onChannelRaidTo(
-      //   userToken.platformUserId,
-      //   async (data) => {
-      //     const broadcaster = await data.getRaidingBroadcaster();
-      //     const apiClient = await this.createApiClient(userToken.userId);
-      //     const color = await apiClient.chat.getColorForUser(broadcaster.id);
-      //
-      //     listener({
-      //       broadcaster: {
-      //         id: broadcaster.id,
-      //         info: {
-      //           displayName: broadcaster.displayName,
-      //           sprite: 'default',
-      //           color: color ?? undefined,
-      //         },
-      //       },
-      //       viewers: {
-      //         count: data.viewers,
-      //         sprite: 'default',
-      //       },
-      //     });
-      //   },
-      // );
+      channelRaidSubscription = this.eventSubHttpListener.onChannelRaidTo(
+        userToken.platformUserId,
+        async (data) => {
+          const broadcaster = await data.getRaidingBroadcaster();
+          const apiClient = await this.createApiClient(userToken.userId);
+          const color = await apiClient.chat.getColorForUser(broadcaster.id);
+
+          listener({
+            broadcaster: {
+              id: broadcaster.id,
+              info: {
+                displayName: broadcaster.displayName,
+                sprite: 'default',
+                color: color ?? undefined,
+              },
+            },
+            viewers: {
+              count: data.viewers,
+              sprite: 'default',
+            },
+          });
+        },
+      );
     };
 
     const onChatMessage = (listener: (data: MessageEntity) => void): void => {

@@ -52,7 +52,7 @@ jobs:
       uses: appleboy/scp-action@v0.1.7
       with:
         source: "compose.prod.yaml,nginx,static"
-        target: /srv/evotars
+        target: /srv/dudes
         host: ${{ secrets.hostname }}
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
