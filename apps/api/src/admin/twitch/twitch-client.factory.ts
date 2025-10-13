@@ -12,13 +12,13 @@ import { UserToken } from '@repo/database';
 import { ApiClient } from '@twurple/api';
 import { RefreshingAuthProvider } from '@twurple/auth';
 import { ChatClient } from '@twurple/chat';
-import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { EventSubSubscription } from '@twurple/eventsub-base';
 import { HttpStatusCode } from 'axios';
 import { EventClient } from '../event-client/event-client.factory';
 import { ChatMessageService } from '../services';
 import { TokenRevokedException } from './token-revoked.exception';
 import { TwitchUserFilterService } from './twitch-user-filter.service';
+import { EventSubHttpListener, ReverseProxyAdapter } from '@twurple/eventsub-http';
 
 const TWITCH_CHATTERS_SEND_INTERVAL = 60 * 1000; // 1 minute.
 
@@ -27,7 +27,7 @@ export class TwitchClientFactory {
 
   public authProvider: RefreshingAuthProvider;
   public apiClient: ApiClient;
-  public eventSubWsListener: EventSubWsListener;
+  public eventSubHttpListener: EventSubHttpListener;
 
   public constructor(
     private readonly configService: ConfigService,
@@ -67,11 +67,17 @@ export class TwitchClientFactory {
 
     this.apiClient = new ApiClient({ authProvider: this.authProvider });
 
-    this.eventSubWsListener = new EventSubWsListener({
+    this.eventSubHttpListener = new EventSubHttpListener({
       apiClient: this.apiClient,
+      adapter: new ReverseProxyAdapter({
+        hostName: this.configService.host,
+        pathPrefix: "twitch",
+        port: 3001,
+      }),
+      secret: this.configService.twitchWebhookSecret,
     });
 
-    this.eventSubWsListener.start();
+    this.eventSubHttpListener.start();
   }
 
   public async addUserToken(
@@ -130,7 +136,7 @@ export class TwitchClientFactory {
       listener: (data: RewardRedemptionData) => void,
     ): void => {
       channelRedemptionAddSubscription =
-        this.eventSubWsListener.onChannelRedemptionAdd(
+        this.eventSubHttpListener.onChannelRedemptionAdd(
           userToken.platformUserId,
           (data) => {
             listener({
@@ -144,7 +150,7 @@ export class TwitchClientFactory {
     };
 
     const onRaid = (listener: (data: RaidEntity) => void): void => {
-      channelRaidSubscription = this.eventSubWsListener.onChannelRaidTo(
+      channelRaidSubscription = this.eventSubHttpListener.onChannelRaidTo(
         userToken.platformUserId,
         async (data) => {
           const broadcaster = await data.getRaidingBroadcaster();
