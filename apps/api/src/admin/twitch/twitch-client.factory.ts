@@ -18,7 +18,10 @@ import { EventClient } from '../event-client/event-client.factory';
 import { ChatMessageService } from '../services';
 import { TokenRevokedException } from './token-revoked.exception';
 import { TwitchUserFilterService } from './twitch-user-filter.service';
-import { EventSubHttpListener, ReverseProxyAdapter } from '@twurple/eventsub-http';
+import {
+  EventSubHttpListener,
+  ReverseProxyAdapter,
+} from '@twurple/eventsub-http';
 
 const TWITCH_CHATTERS_SEND_INTERVAL = 60 * 1000; // 1 minute.
 
@@ -71,7 +74,7 @@ export class TwitchClientFactory {
       apiClient: this.apiClient,
       adapter: new ReverseProxyAdapter({
         hostName: this.configService.host,
-        pathPrefix: "twitch",
+        pathPrefix: 'twitch',
         port: 3001,
         usePathPrefixInHandlers: true,
       }),
@@ -79,6 +82,8 @@ export class TwitchClientFactory {
     });
 
     this.eventSubHttpListener.start();
+
+    this.logger.log('Initialized');
   }
 
   public async addUserToken(
@@ -120,11 +125,17 @@ export class TwitchClientFactory {
   }
 
   public async createApiClient(userId: number): Promise<ApiClient> {
+    this.logger.log('createApiClient');
     await this.addUserToken(userId);
+    this.logger.log(`Token added with userId ${userId}`);
     return this.apiClient;
   }
 
   public async createEventClient(userToken: UserToken): Promise<EventClient> {
+    this.logger.log(
+      `Created Event Client with login ${userToken.platformLogin}`,
+    );
+
     const chatClient = new ChatClient({
       authProvider: this.authProvider,
       channels: [userToken.platformLogin],
@@ -150,9 +161,7 @@ export class TwitchClientFactory {
         );
     };
 
-    const onRaid = (
-      listener: (data: RaidEntity) => void
-    ): void => {
+    const onRaid = (listener: (data: RaidEntity) => void): void => {
       channelRaidSubscription = this.eventSubHttpListener.onChannelRaidTo(
         userToken.platformUserId,
         async (data) => {
