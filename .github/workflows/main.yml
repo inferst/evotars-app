@@ -90,7 +90,7 @@ jobs:
           command_timeout: 30m
           envs: HOST,HOST_URL,ADMIN_URL,CLIENT_URL,TWITCH_CLIENT_ID,TWITCH_WEBHOOK_SECRET,TWITCH_CLIENT_SECRET,TWITCH_CALLBACK_URL,SESSION_SECRET,DATABASE_URL,REMIX_PORT,APP_IMAGE_NAME,WEBSITE_IMAGE_NAME
           script: |
-            cd /srv/evotars
+            cd /srv/dudes
 
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
