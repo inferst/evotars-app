@@ -14,7 +14,7 @@ export function Footer() {
             target="_blank"
             rel="noreferrer"
           >
-            <img src="/github.svg" alt="Github logo" width={32} height={32} />
+            <img src="/assets/github.svg" alt="Github logo" width={32} height={32} />
           </a>
         </div>
       </footer>

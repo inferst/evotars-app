@@ -18,7 +18,7 @@ export const Features = async () => {
         <Card
           icon={
             <Image
-              src="/twitch.svg"
+              src="/assets/twitch.svg"
               alt="Github logo"
               width={24}
               height={24}
@@ -42,7 +42,7 @@ export const Features = async () => {
         <Card
           icon={
             <Image
-              src="/twitch.svg"
+              src="/assets/twitch.svg"
               alt="Github logo"
               width={24}
               height={24}

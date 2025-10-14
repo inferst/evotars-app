@@ -11,7 +11,7 @@ export const Login = async () => {
         href="/api/auth/login"
       >
         <Image
-          src="/twitch.svg"
+          src="/assets/twitch.svg"
           alt="Github logo"
           width={30}
           height={30}

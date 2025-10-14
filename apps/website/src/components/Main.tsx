@@ -30,7 +30,7 @@ export const Main = async () => {
           <Login />
         </div>
         <div
-          className="flex justify-center bg-[url('/obs.png')] bg-no-repeat bg-contain bg-top w-full max-w-[1200px] aspect-[var(--aspect)]"
+          className="flex justify-center bg-[url('/assets/obs.png')] bg-no-repeat bg-contain bg-top w-full max-w-[1200px] aspect-[var(--aspect)]"
           style={
             {
               '--aspect': '1.15/1',
@@ -64,7 +64,7 @@ export const Main = async () => {
         <div className="flex flex-1 justify-end items-center">
           <a href="https://github.com/inferst/evotars" target="_blank">
             <Image
-              src="/github.svg"
+              src="/assets/github.svg"
               alt="Github logo"
               width={40}
               height={40}
