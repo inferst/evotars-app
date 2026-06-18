@@ -1,8 +1,9 @@
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { SocketService } from '@/admin/services';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
@@ -12,15 +13,21 @@ import { ClientToServerEvents, ServerToClientEvents } from '@repo/types';
   cors: true,
   transport: ['websocket'],
 })
-export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class EventsGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
-  private readonly server!: Socket;
+  private readonly server!: Server<ClientToServerEvents, ServerToClientEvents>;
 
   public constructor(
     private readonly socketService: SocketService<
-      Socket<ServerToClientEvents, ClientToServerEvents>
+      Socket<ClientToServerEvents, ServerToClientEvents>
     >,
   ) {}
+
+  public afterInit(): void {
+    this.socketService.bindServer(this.server);
+  }
 
   public handleDisconnect(socket: Socket): void {
     this.socketService.handleDisconnect(socket);

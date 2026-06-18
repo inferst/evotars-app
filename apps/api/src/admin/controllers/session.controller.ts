@@ -8,7 +8,7 @@ import { SocketService } from '../services';
 export class SessionController {
   public constructor(
     private readonly socketService: SocketService<
-      Socket<ServerToClientEvents, ClientToServerEvents>
+      Socket<ClientToServerEvents, ServerToClientEvents>
     >,
   ) {}
 
