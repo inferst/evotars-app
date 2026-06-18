@@ -29,3 +29,4 @@ declare global {
 }
 
 export * from '../generated/client';
+export * from './seed';

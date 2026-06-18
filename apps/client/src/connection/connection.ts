@@ -2,8 +2,8 @@ import {
   ClientToServerEvents,
   MessageEntity,
   RaidEntity,
-  ServerToClientsEvents,
-  SettingsEntity,
+  ResolvedSettingsEntity,
+  ServerToClientEvents,
   TwitchChatterEntity,
   UserActionEntity,
 } from '@repo/types';
@@ -16,7 +16,7 @@ type ConnectionError = {
 } & Error;
 
 export class Connection {
-  private socket!: Socket<ServerToClientsEvents, ClientToServerEvents>;
+  private socket!: Socket<ServerToClientEvents, ClientToServerEvents>;
 
   public init(): void {
     const path = window.location.pathname.split('/');
@@ -48,7 +48,7 @@ export class Connection {
     this.socket.on('action', callback);
   }
 
-  public onSettings(callback: (data: SettingsEntity) => void): void {
+  public onSettings(callback: (data: ResolvedSettingsEntity) => void): void {
     this.socket.on('settings', callback);
   }
 

@@ -1,10 +1,12 @@
 import { UserRepository } from '@/admin/repositories';
 import { Injectable, Logger } from '@nestjs/common';
-import { Settings, UserToken } from '@repo/database';
+import { UserToken } from '@repo/database';
 import {
   ClientToServerEvents,
-  ServerToClientsEvents,
+  ResolvedSettingsEntity,
+  ServerToClientEvents,
   UserInfo,
+  withSettingsDefaults,
 } from '@repo/types';
 import { Socket } from 'socket.io';
 import { SettingsRepository } from '../repositories/settings.repository';
@@ -31,7 +33,7 @@ type Room = {
 
 @Injectable()
 export class SocketService<
-  TSocket extends Socket<ClientToServerEvents, ServerToClientsEvents>,
+  TSocket extends Socket<ClientToServerEvents, ServerToClientEvents>,
 > {
   private readonly logger = new Logger(SocketService.name);
 
@@ -45,7 +47,7 @@ export class SocketService<
     private readonly actionService: ActionService,
     private readonly chatMessageService: ChatMessageService,
     private readonly emoteService: EmoteService,
-    private readonly eventClinetFactory: EventClientFactory,
+    private readonly eventClientFactory: EventClientFactory,
   ) {}
 
   public getRooms(): Map<string, Room> {
@@ -114,8 +116,9 @@ export class SocketService<
     this.connectedClients.set(socket.id, { socket, roomId: userGuid });
 
     const settings = await this.settingsRepository.get(user.userId);
+    const settingsData = withSettingsDefaults(settings.data);
 
-    socket.emit('settings', settings.data);
+    socket.emit('settings', settingsData);
 
     if (room) {
       this.rooms.set(userGuid, { ...room, clients: [...room.clients, socket] });
@@ -128,7 +131,7 @@ export class SocketService<
 
     this.logger.log('Room initialized with id: ' + userGuid);
 
-    const eventClient = await this.eventClinetFactory.createFromUser(user);
+    const eventClient = await this.eventClientFactory.createFromUser(user);
     eventClient.connect();
 
     const emoteClient = await this.emoteService.createClient(
@@ -143,7 +146,7 @@ export class SocketService<
     }
 
     eventClient.onChatMessage(async (data) => {
-      if (this.isHiddenChatter(data.info.displayName, settings)) {
+      if (this.isHiddenChatter(data.info.displayName, settingsData)) {
         return;
       }
 
@@ -197,7 +200,7 @@ export class SocketService<
 
     eventClient.onChatters((data) => {
       const entities = data.filter(
-        (entity) => !this.isHiddenChatter(entity.name, settings),
+        (entity) => !this.isHiddenChatter(entity.name, settingsData),
       );
 
       socket.emit('chatters', entities);
@@ -222,7 +225,7 @@ export class SocketService<
     });
 
     eventClient.onRewardRedemptionAdd(async (data) => {
-      if (this.isHiddenChatter(data.userDisplayName, settings)) {
+      if (this.isHiddenChatter(data.userDisplayName, settingsData)) {
         return;
       }
 
@@ -252,12 +255,13 @@ export class SocketService<
     this.logger.log('Chat client initialized in room with id: ' + userGuid);
   }
 
-  private isHiddenChatter(userName: string, settings: Settings): boolean {
-    return (
-      settings.data.hiddenUsers
-        ?.split(' ')
-        .some((user) => user.toLowerCase() == userName.toLowerCase()) ?? false
-    );
+  private isHiddenChatter(
+    userName: string,
+    settings: ResolvedSettingsEntity,
+  ): boolean {
+    return settings.hiddenUsers
+      .split(' ')
+      .some((user) => user.toLowerCase() == userName.toLowerCase());
   }
 
   private async getChatterInfo(
