@@ -62,7 +62,6 @@ const twitchClientFactory = {
     PrismaService,
     TwitchUserFilterService,
     ChatMessageService,
-    EmoteService,
   ],
 };
 

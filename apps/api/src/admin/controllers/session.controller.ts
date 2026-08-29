@@ -1,6 +1,6 @@
 import { AdminGuard } from '@/auth/guards/admin.guard';
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { ClientToServerEvents, ServerToClientsEvents } from '@repo/types';
+import { ClientToServerEvents, ServerToClientEvents } from '@repo/types';
 import { Socket } from 'socket.io';
 import { SocketService } from '../services';
 
@@ -8,7 +8,7 @@ import { SocketService } from '../services';
 export class SessionController {
   public constructor(
     private readonly socketService: SocketService<
-      Socket<ServerToClientsEvents, ClientToServerEvents>
+      Socket<ClientToServerEvents, ServerToClientEvents>
     >,
   ) {}
 

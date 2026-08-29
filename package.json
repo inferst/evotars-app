@@ -10,9 +10,6 @@
     "db:migrate:deploy": "turbo db:migrate:deploy",
     "db:seed": "turbo db:seed"
   },
-  "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} apps/api/src/database/seed/seed.ts"
-  },
   "devDependencies": {
     "turbo": "2.5.3",
     "typescript": "5.8.3"
