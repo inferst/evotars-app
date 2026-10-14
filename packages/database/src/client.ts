@@ -17,6 +17,7 @@ declare global {
       fallingRaiders?: boolean;
       hiddenUsers?: string;
       maxEvotars?: number;
+      showEmotes?: boolean;
     };
 
     type ActionData = Record<string, string | number | undefined>;

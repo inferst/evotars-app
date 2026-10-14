@@ -148,7 +148,9 @@ export class SocketService<
       }
 
       const customEmotes = emoteClient.getEmotes(data.message);
-      const emotes = data.emotes.concat(customEmotes.map((emote) => emote.url));
+      const emotes = this.isEmotesEnabled(settings)
+        ? data.emotes.concat(customEmotes.map((emote) => emote.url))
+        : [];
 
       const action = await this.actionService.getUserActionByMessage(
         user.userId,
@@ -258,6 +260,10 @@ export class SocketService<
         ?.split(' ')
         .some((user) => user.toLowerCase() == userName.toLowerCase()) ?? false
     );
+  }
+
+  private isEmotesEnabled(settings: Settings): boolean {
+    return settings.data.showEmotes ?? true;
   }
 
   private async getChatterInfo(
