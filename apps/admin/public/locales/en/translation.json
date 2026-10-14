@@ -61,6 +61,8 @@
   "SettingsForm.spawnAnonymousViewersDescription": "Viewers who don't chat will be spawned without names",
   "SettingsForm.showEmotesText": "Show emotes",
   "SettingsForm.showEmotesDescription": "Evotars spit out emotes from chat messages",
+  "SettingsForm.showMessagesText": "Show messages",
+  "SettingsForm.showMessagesDescription": "Evotars show the text of chat messages",
   "SettingsForm.raidTitle": "Raid",
   "SettingsForm.fallingRaidersText": "Falling raiders",
   "SettingsForm.fallingRaidersDescription": "Drop raiders in the top of screen",

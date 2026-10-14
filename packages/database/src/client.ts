@@ -18,6 +18,7 @@ declare global {
       hiddenUsers?: string;
       maxEvotars?: number;
       showEmotes?: boolean;
+      showMessages?: boolean;
     };
 
     type ActionData = Record<string, string | number | undefined>;

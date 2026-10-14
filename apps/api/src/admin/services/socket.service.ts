@@ -148,9 +148,10 @@ export class SocketService<
       }
 
       const customEmotes = emoteClient.getEmotes(data.message);
-      const emotes = this.isEmotesEnabled(settings)
-        ? data.emotes.concat(customEmotes.map((emote) => emote.url))
-        : [];
+      const allEmotes = data.emotes.concat(
+        customEmotes.map((emote) => emote.url),
+      );
+      const emotes = this.isEmotesEnabled(settings) ? allEmotes : [];
 
       const action = await this.actionService.getUserActionByMessage(
         user.userId,
@@ -178,7 +179,8 @@ export class SocketService<
         customEmotes.map((emote) => emote.name),
       );
 
-      if (strippedMessage || emotes.length > 0) {
+      // Emit even when text or emotes are disabled, so the evotar still spawns
+      if (strippedMessage || allEmotes.length > 0) {
         const chatterInfo = await this.getChatterInfo(
           user.userId,
           data.userId,
@@ -187,7 +189,7 @@ export class SocketService<
 
         const messageData = {
           ...data,
-          message: strippedMessage,
+          message: this.isMessagesEnabled(settings) ? strippedMessage : '',
           emotes,
           info: chatterInfo,
         };
@@ -264,6 +266,10 @@ export class SocketService<
 
   private isEmotesEnabled(settings: Settings): boolean {
     return settings.data.showEmotes ?? true;
+  }
+
+  private isMessagesEnabled(settings: Settings): boolean {
+    return settings.data.showMessages ?? true;
   }
 
   private async getChatterInfo(

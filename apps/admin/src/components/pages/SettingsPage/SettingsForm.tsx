@@ -192,6 +192,40 @@ export function SettingsForm(props: SettingsFormProps) {
           ></FormField>
         </div>
       </div>
+      <div className="grid grid-cols-4 gap-4 mt-4">
+        <div className="lg:col-span-1 col-span-2">
+          <Label htmlFor="showMessages" className="text-xl">
+            {t('SettingsForm.showMessagesText', {
+              defaultValue: 'Show messages',
+            })}
+          </Label>
+          <p className="text-sm text-muted-foreground">
+            {t('SettingsForm.showMessagesDescription', {
+              defaultValue: 'Evotars show the text of chat messages',
+            })}
+          </p>
+        </div>
+        <div className="lg:col-span-3 col-span-2">
+          <FormField
+            control={form.control}
+            name={'showMessages'}
+            render={({ field }) => {
+              return (
+                <Switch
+                  {...field}
+                  id="showMessages"
+                  onCheckedChange={(value) => {
+                    field.onChange(value);
+                    handleSubmit();
+                  }}
+                  checked={field.value ?? true}
+                  value={`${field.value ?? true}`}
+                ></Switch>
+              );
+            }}
+          ></FormField>
+        </div>
+      </div>
       <Separator className="mt-4 mb-8" />
       <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
         {t('SettingsForm.raidTitle', {
