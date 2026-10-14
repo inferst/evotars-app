@@ -59,6 +59,8 @@
   "SettingsForm.fallingEvotarsDescription": "Drop evotar in the top of screen",
   "SettingsForm.spawnAnonymousViewersText": "Spawn anonymous viewers",
   "SettingsForm.spawnAnonymousViewersDescription": "Viewers who don't chat will be spawned without names",
+  "SettingsForm.showEmotesText": "Show emotes",
+  "SettingsForm.showEmotesDescription": "Evotars spit out emotes from chat messages",
   "SettingsForm.raidTitle": "Raid",
   "SettingsForm.fallingRaidersText": "Falling raiders",
   "SettingsForm.fallingRaidersDescription": "Drop raiders in the top of screen",

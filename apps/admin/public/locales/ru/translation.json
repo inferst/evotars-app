@@ -59,6 +59,8 @@
   "SettingsForm.fallingEvotarsDescription": "Челы падают сверху экрана",
   "SettingsForm.spawnAnonymousViewersText": "Спавнить анонимных челов",
   "SettingsForm.spawnAnonymousViewersDescription": "Зрители, которые ничего не писали, будут спавниться без имен",
+  "SettingsForm.showEmotesText": "Показывать эмоуты",
+  "SettingsForm.showEmotesDescription": "Челы выплёвывают эмоуты из сообщений в чате",
   "SettingsForm.raidTitle": "Рейд",
   "SettingsForm.fallingRaidersText": "Падающие рейдеры",
   "SettingsForm.fallingRaidersDescription": "Рейдеры падают сверху экрана",

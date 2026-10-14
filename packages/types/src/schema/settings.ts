@@ -7,6 +7,7 @@ export const updateSettingsDtoSchema = z.object({
   fallingRaiders: z.boolean().default(false).optional(),
   hiddenUsers: z.string().default('').optional(),
   maxEvotars: z.number().max(1000).positive().default(100).optional(),
+  showEmotes: z.boolean().default(true).optional(),
 });
 
 export const defaultSettingsValues: UpdateSettingsDto = {
@@ -15,6 +16,7 @@ export const defaultSettingsValues: UpdateSettingsDto = {
   fallingRaiders: false,
   hiddenUsers: '',
   maxEvotars: 100,
+  showEmotes: true,
 };
 
 export type UpdateSettingsForm = UpdateSettingsDto;
