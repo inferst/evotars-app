@@ -8,6 +8,7 @@ export const updateSettingsDtoSchema = z.object({
   hiddenUsers: z.string().default('').optional(),
   maxEvotars: z.number().max(1000).positive().default(100).optional(),
   showEmotes: z.boolean().default(true).optional(),
+  showMessages: z.boolean().default(true).optional(),
 });
 
 export const defaultSettingsValues: UpdateSettingsDto = {
@@ -17,6 +18,7 @@ export const defaultSettingsValues: UpdateSettingsDto = {
   hiddenUsers: '',
   maxEvotars: 100,
   showEmotes: true,
+  showMessages: true,
 };
 
 export type UpdateSettingsForm = UpdateSettingsDto;
