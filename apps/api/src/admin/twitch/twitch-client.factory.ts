@@ -2,6 +2,8 @@ import { ConfigService } from '@/config/config.service';
 import { TWITCH_PLATFORM_ID, TWITCH_SCOPE } from '@/constants';
 import { PrismaService } from '@/database/prisma.service';
 import {
+  BanEntity,
+  MessageDeleteEntity,
   MessageEntity,
   RaidEntity,
   RewardRedemptionData,
@@ -222,6 +224,7 @@ export class TwitchClientFactory {
         );
 
         listener({
+          id: msg.id,
           userId: userId,
           emotes: twitchEmotes,
           message: strippedMessage,
@@ -231,6 +234,28 @@ export class TwitchClientFactory {
             color: msg.userInfo.color,
           },
         });
+      });
+    };
+
+    const onMessageDelete = (
+      listener: (data: MessageDeleteEntity) => void,
+    ): void => {
+      chatClient.onMessageRemove((_channel, messageId) => {
+        listener({ messageId });
+      });
+    };
+
+    const onBan = (listener: (data: BanEntity) => void): void => {
+      chatClient.onBan((_channel, _user, msg) => {
+        if (msg.targetUserId) {
+          listener({ userId: msg.targetUserId });
+        }
+      });
+
+      chatClient.onTimeout((_channel, _user, duration, msg) => {
+        if (msg.targetUserId) {
+          listener({ userId: msg.targetUserId, duration });
+        }
       });
     };
 
@@ -322,6 +347,8 @@ export class TwitchClientFactory {
       connect,
       disconnect,
       onChatMessage,
+      onMessageDelete,
+      onBan,
       onChatters,
       onRaid,
       onRewardRedemptionAdd,

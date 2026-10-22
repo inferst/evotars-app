@@ -18,6 +18,9 @@ import { ChatMessageService } from './chat-message.service';
 import { ChatterRepository } from '../repositories/chatter.repository';
 import { IEmoteClient, EmoteService } from './emotes/emote.service';
 
+// Long enough to outlive processing of the deleted message.
+const DELETED_MESSAGE_TTL = 10 * 1000; // 10 seconds.
+
 type SocketClient = {
   socket: Socket;
   roomId?: string;
@@ -142,10 +145,26 @@ export class SocketService<
       this.rooms.set(userGuid, { ...connectedRoom, eventClient, emoteClient });
     }
 
+    // Chatter id → ban expiration timestamp, so banned chatters
+    // don't respawn from the chatters list.
+    const bannedChatters = new Map<string, number>();
+
+    const isBannedChatter = (userId: string): boolean =>
+      (bannedChatters.get(userId) ?? 0) > Date.now();
+
+    const deletedMessageIds = new Set<string>();
+
     eventClient.onChatMessage(async (data) => {
       if (this.isHiddenChatter(data.info.displayName, settings)) {
         return;
       }
+
+      // The chatter is able to write, so they have been unbanned
+      bannedChatters.delete(data.userId);
+
+      // A ban or a deletion can arrive while the message is being processed
+      const isModerated = (): boolean =>
+        isBannedChatter(data.userId) || deletedMessageIds.has(data.id);
 
       const customEmotes = emoteClient.getEmotes(data.message);
       const allEmotes = data.emotes.concat(
@@ -160,7 +179,7 @@ export class SocketService<
         data.info,
       );
 
-      if (action) {
+      if (action && !isModerated()) {
         const actionData = {
           ...data,
           ...action,
@@ -187,6 +206,10 @@ export class SocketService<
           data.info,
         );
 
+        if (isModerated()) {
+          return;
+        }
+
         const messageData = {
           ...data,
           message: this.isMessagesEnabled(settings) ? strippedMessage : '',
@@ -199,9 +222,34 @@ export class SocketService<
       }
     });
 
+    eventClient.onMessageDelete((data) => {
+      deletedMessageIds.add(data.messageId);
+
+      setTimeout(
+        () => deletedMessageIds.delete(data.messageId),
+        DELETED_MESSAGE_TTL,
+      );
+
+      socket.emit('messageDelete', data);
+      socket.broadcast.to(userGuid).emit('messageDelete', data);
+    });
+
+    eventClient.onBan((data) => {
+      const expiresAt = data.duration
+        ? Date.now() + data.duration * 1000
+        : Infinity;
+
+      bannedChatters.set(data.userId, expiresAt);
+
+      socket.emit('ban', data);
+      socket.broadcast.to(userGuid).emit('ban', data);
+    });
+
     eventClient.onChatters((data) => {
       const entities = data.filter(
-        (entity) => !this.isHiddenChatter(entity.name, settings),
+        (entity) =>
+          !this.isHiddenChatter(entity.name, settings) &&
+          !isBannedChatter(entity.userId),
       );
 
       socket.emit('chatters', entities);

@@ -60,6 +60,10 @@ export class App {
     });
 
     this.connection.onMessage((data) => evotars.processMessage(data));
+    this.connection.onMessageDelete((data) =>
+      evotars.processMessageDelete(data),
+    );
+    this.connection.onBan((data) => evotars.processBan(data));
     this.connection.onAction((data) => evotars.processAction(data));
     this.connection.onChatters((data) => evotars.processChatters(data));
     this.connection.onRaid((data) => evotars.processRaid(data));

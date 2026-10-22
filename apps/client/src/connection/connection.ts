@@ -1,5 +1,7 @@
 import {
+  BanEntity,
   ClientToServerEvents,
+  MessageDeleteEntity,
   MessageEntity,
   RaidEntity,
   ServerToClientsEvents,
@@ -42,6 +44,14 @@ export class Connection {
 
   public onMessage(callback: (data: MessageEntity) => void): void {
     this.socket.on('message', callback);
+  }
+
+  public onMessageDelete(callback: (data: MessageDeleteEntity) => void): void {
+    this.socket.on('messageDelete', callback);
+  }
+
+  public onBan(callback: (data: BanEntity) => void): void {
+    this.socket.on('ban', callback);
   }
 
   public onAction(callback: (data: UserActionEntity) => void): void {
