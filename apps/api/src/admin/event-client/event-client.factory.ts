@@ -1,4 +1,6 @@
 import {
+  BanEntity,
+  MessageDeleteEntity,
   MessageEntity,
   RaidEntity,
   RewardRedemptionData,
@@ -12,6 +14,8 @@ export type EventClient = {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   onChatMessage: (listener: (data: MessageEntity) => void) => void;
+  onMessageDelete: (listener: (data: MessageDeleteEntity) => void) => void;
+  onBan: (listener: (data: BanEntity) => void) => void;
   onChatters: (listener: (data: TwitchChatterEntity[]) => void) => void;
   onRaid: (listener: (data: RaidEntity) => void) => void;
   onRewardRedemptionAdd: (

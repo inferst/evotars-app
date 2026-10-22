@@ -1,4 +1,5 @@
 export * from './action';
+export * from './ban';
 export * from './chatter';
 export * from './command';
 export * from './message';
